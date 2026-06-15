@@ -6,88 +6,82 @@ Nexora AI is a SaaS-grade AI-powered research and search platform. Users can ent
 
 ---
 
-## Architecture Overview
+## Technical Stack & Architecture
 
 Nexora AI is designed using **Clean Architecture** principles and a modular service layer, keeping domain logic decoupled from external integrations.
+
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS, Framer Motion
+- **Backend**: Node.js, Express.js, TypeScript, TSX
+- **Search Engine**: SearXNG (Self-hosted via Docker)
+- **Local LLM**: Ollama (Supporting Qwen3.6 / Qwen2.5 / cloud models)
 
 ```
 /clone
   /backend
     /src
       /core
-        /entities       # Core entity structures (SearchQueryRecord, SourceReference)
+        /entities       # Core entity structures (SearchQueryRecord, ChatMessage)
         /interfaces     # Service provider interfaces (ISearch, IExtraction, ISummarize)
-      /services         # Pluggable service implementations (Search, Extraction, Summarize)
+      /services         # Pluggable service implementations (SearXNG, Extraction, Ollama)
       /controllers      # Request mapping & validation
-      /routes           # Route specifications
+      /routes           # Route specifications (search, auth)
       app.ts            # Application configurations
       server.ts         # Server entry point
   /frontend
     /src
       /app              # Next.js 15 App Router views and layouts
-      /components       # Reusable React components (Navbar, SearchBar, AnswerCard, etc.)
+      /components       # Reusable React components (Navbar, AuthModal, SearchBar, AnswerCard, etc.)
       /context          # React Context (SearchContext, ThemeContext)
       /types            # TypeScript declarations
+  /searxng              # Local SearXNG settings override files
 ```
 
-### Pluggable Integration Architecture
-The backend isolates third-party API dependencies inside the `src/services` folder using abstract core interfaces:
-- **`ISearchService`**: Abstract search indexer. Currently simulates web searches (easily pluggable for **SearXNG** later).
-- **`IExtractionService`**: Abstract page content reader. Currently simulates HTML body crawlers (easily pluggable for **Firecrawl** later).
-- **`ISummarizationService`**: Abstract LLM response generator. Currently synthesizes structured answers with citation tags (easily pluggable for **Ollama** later).
+---
+
+## Key Features
+
+### 1. Conversational Prompt Branching (ChatGPT/Gemini/Claude Style)
+- **Inline Prompt Editing**: Click the Pencil icon next to any user message to edit your query.
+- **Path Forking & Branching**: Modifying a query splits the conversation history into a new branch. The backend clones the message history up to the edited point and queries new search results.
+- **Version Pagination Selector**: Toggles sibling versions next to branched queries (e.g. `< 1 / 2 >`) to view alternative response trajectories in real-time.
+
+### 2. Full-Stack User Authentication
+- **Auth Modal Popup**: Complete interactive drawer for account Sign In and Sign Up.
+- **Mock Token Session Persistence**: Restores user sessions via `localStorage` headers automatically.
+- **Profile Menus**: Display account details and sign-out controls when active.
+
+### 3. Live Web Search Scrapers (SearXNG)
+- Integrates a self-hosted **SearXNG** Docker container to query and crawl live web citation references (URL links, site favicons, snippets, and page text).
+
+### 4. Smart Web Snippet Synthesis Fallback
+- If your local Ollama LLM is offline or downloading, the backend automatically compiles direct insights from SearXNG search result snippets into a custom markdown summary. You get real, accurate answers to your exact questions immediately.
 
 ---
 
 ## Backend APIs
 
 ### `POST /api/search`
-Executes search, crawl extraction, and LLM summarization.
+Executes search, crawl extraction, and LLM summarization. Supports thread histories and prompt branching.
 - **Request Body:**
   ```json
   {
-    "query": "latest AI agent developments"
-  }
-  ```
-- **Response Format:**
-  ```json
-  {
-    "id": "nex_1781498800000_abc123",
     "query": "latest AI agent developments",
-    "answer": "### Recent Milestones in AI Agent Orchestration...",
-    "sources": [
-      {
-        "title": "State of AI Agents: 2026 Developer Survey",
-        "url": "https://nexora.ai/research/state-of-ai-agents-2026",
-        "snippet": "Recent industry telemetry reports..."
-      }
-    ],
-    "relatedQuestions": [
-      "What are autonomous AI agents?",
-      "How do AI agents work?"
-    ],
-    "stats": {
-      "searchTime": 250,
-      "resultsCount": 4
-    },
-    "createdAt": "2026-06-15T04:39:19.000Z"
+    "threadId": "optional-existing-thread-id",
+    "editMessageIndex": 0 // optional to trigger branch
   }
   ```
 
-### `GET /api/history`
-Retrieves a list of recent research threads.
+### `POST /api/search/switch-path`
+Switches active path index branch in a thread history.
 
-### `GET /api/search/:id`
-Retrieves the details of a specific thread by ID.
+### `POST /api/auth/register`
+Registers a new user name, email, and password.
 
----
+### `POST /api/auth/login`
+Authenticates email and password credentials.
 
-## Frontend Features
-
-- **Next.js 15 & React:** Utilizes TypeScript, modern App Router architecture, and strict typing.
-- **Framer Motion:** Smooth sliding transitions for thread history draw drawers and spring physics for the theme switch toggle.
-- **Tailwind CSS v4.0:** Clean dark design system featuring custom Outfit and Inter typography and glassmorphic card borders.
-- **Interactive Citations:** Clicking inline citation indexes (e.g. `[1]`) triggers spring scrolling and highlights the referenced web source card.
-- **Robust Theme Control:** Restructures dark/light modes using class toggles on the document element, cached in localStorage to prevent hydration flicker.
+### `GET /api/auth/me`
+Fetches active user profile from authorization Bearer header.
 
 ---
 
@@ -95,9 +89,15 @@ Retrieves the details of a specific thread by ID.
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- npm (v9 or higher)
+- Docker Desktop (for running SearXNG)
 
-### 1. Start the Backend API
+### 1. Start SearXNG via Docker
+Launch the self-hosted SearXNG search engine container with JSON format support:
+```bash
+docker run -d -p 8080:8080 --name searxng -v ./searxng:/etc/searxng searxng/searxng
+```
+
+### 2. Start the Backend API
 1. Navigate to the backend directory:
    ```bash
    cd backend
@@ -110,9 +110,16 @@ Retrieves the details of a specific thread by ID.
    ```bash
    npm run dev
    ```
-   *The backend will boot on port `5001`. Verification endpoints will be listening at `http://localhost:5001/api`.*
+   *The backend runs on port `5001`. Verification endpoints listen at `http://localhost:5001/api`.*
 
-### 2. Start the Frontend Client
+### 3. Connect Local LLM (Ollama)
+1. Download Ollama from [ollama.com](https://ollama.com).
+2. Start Ollama and download the model configured in your `.env` (defaults to `qwen3.6` / `qwen2.5`):
+   ```bash
+   ollama run qwen3.6
+   ```
+
+### 4. Start the Frontend Client
 1. Navigate to the frontend directory:
    ```bash
    cd ../frontend
@@ -121,8 +128,18 @@ Retrieves the details of a specific thread by ID.
    ```bash
    npm install
    ```
-3. Launch the client development server:
+3. Launch the Next.js development server:
    ```bash
    npm run dev
    ```
-   *The client will boot on port `3000`. Navigate to `http://localhost:3000` to interact with the search engine dashboard.*
+   *The client boots on port `3000`. Navigate to `http://localhost:3000` to start searching.*
+
+---
+
+## Git Commit & Deploy Commands
+
+Initialize and push local commits to your remote repository:
+```bash
+git remote add origin https://github.com/gautham-8087/Nexora-AI-Application.git
+git push -u origin main
+```
