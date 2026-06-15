@@ -1,0 +1,13 @@
+# SearXNG configuration for Nexora AI
+use_default_settings: true
+
+search:
+  formats:
+    - html
+    - json
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "nexora_ai_dev_secret"
+  limiter: false # Disable rate limits for local development testing
