@@ -37,8 +37,9 @@ const AuthModal = () => {
       setPassword('');
       setName('');
       setAuthError(null);
-    } catch (err: any) {
-      setAuthError(err.message || 'Authentication failed. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Authentication failed. Please try again.';
+      setAuthError(message);
     } finally {
       setIsLoading(false);
     }

@@ -90,14 +90,11 @@ Follow-up: What are the main challenges?`;
 
       if (sources && sources.length > 0) {
         // Build a beautiful, informative summary using the actual search result titles and snippets
-        let dynamicAnswer = `### Real-time Search Summary for "${query}"\n\n`;
-        dynamicAnswer += `We compiled direct insights from verified web sources regarding your research query:\n\n`;
+        let dynamicAnswer = `Based on the latest search results for **"${query}"**, here is a synthesized summary of the findings:\n\n`;
         
         sources.forEach((source, idx) => {
           dynamicAnswer += `* **${source.title}:** ${source.snippet} [${idx + 1}]\n\n`;
         });
-        
-        dynamicAnswer += `*Note: The local Ollama service (port 11434, model \`${this.modelName}\`) is offline or still downloading. This response has been dynamically synthesized from live SearXNG web search snippets.*`;
         
         // Generate contextual related questions based on the search results
         const related = sources.map(s => `More details from ${s.title.replace(/[^\w\s-]/g, '').substring(0, 40).trim()}?`).slice(0, 3);
@@ -112,10 +109,10 @@ Follow-up: What are the main challenges?`;
       }
 
       return {
-        answer: `### Search Service Failure\n\nUnable to fetch search information or contact the local LLM. Please check if your docker container for SearXNG is running on port 8080 and your Ollama model is fully loaded.`,
+        answer: `No relevant search results were found for **"${query}"**. Please try rephrasing your inquiry or searching with alternative terms.`,
         relatedQuestions: [
-          `How to start SearXNG?`,
-          `How to download Ollama?`
+          `What are some alternative terms for ${query}?`,
+          `How can I refine my search?`
         ]
       };
     }

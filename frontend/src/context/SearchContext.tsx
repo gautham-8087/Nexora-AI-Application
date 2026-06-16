@@ -30,6 +30,18 @@ const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.error || error.message || fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
   const [query, setQuery] = useState('');
   const [activeThread, setActiveThread] = useState<ThreadRecord | null>(null);
@@ -68,8 +80,8 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.data) {
         setHistory(response.data);
       }
-    } catch (err: any) {
-      console.error('Nexora Client: Failed to retrieve history:', err.message);
+    } catch (error: unknown) {
+      console.error('Nexora Client: Failed to retrieve history:', getErrorMessage(error, 'Failed to retrieve history'));
     }
   };
 
@@ -84,9 +96,10 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
         return true;
       }
       return false;
-    } catch (err: any) {
-      console.error('Nexora Auth: Login error:', err.message);
-      throw new Error(err.response?.data?.error || 'Invalid credentials');
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, 'Invalid credentials');
+      console.error('Nexora Auth: Login error:', message);
+      throw new Error(message);
     }
   };
 
@@ -101,9 +114,10 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
         return true;
       }
       return false;
-    } catch (err: any) {
-      console.error('Nexora Auth: Registration error:', err.message);
-      throw new Error(err.response?.data?.error || 'Failed to register account');
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, 'Failed to register account');
+      console.error('Nexora Auth: Registration error:', message);
+      throw new Error(message);
     }
   };
 
@@ -125,8 +139,8 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
           setQuery(response.data.query);
         }
       }
-    } catch (err: any) {
-      console.error('Nexora Client: Branch switch error:', err.message);
+    } catch (error: unknown) {
+      console.error('Nexora Client: Branch switch error:', getErrorMessage(error, 'Failed to switch conversation version.'));
       setError('Failed to switch conversation version.');
     } finally {
       setIsLoading(false);
@@ -182,8 +196,9 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
         setActiveThread(response.data);
         fetchHistory(); // Refresh recent threads
       }
-    } catch (err: any) {
-      console.error('Nexora Client: Search execution error:', err.message);
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, 'Connection to the Nexora research backend failed. Please ensure the backend server is running on port 5001.');
+      console.error('Nexora Client: Search execution error:', message);
       setError('Connection to the Nexora research backend failed. Please ensure the backend server is running on port 5001.');
       
       // Fallback local simulated assistant response
@@ -248,8 +263,8 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
           setQuery(response.data.query);
         }
       }
-    } catch (err: any) {
-      console.error('Nexora Client: Failed to retrieve thread detail:', err.message);
+    } catch (error: unknown) {
+      console.error('Nexora Client: Failed to retrieve thread detail:', getErrorMessage(error, 'Failed to retrieve thread detail'));
       // Fallback
       const fallbackItem = history.find(h => h.id === id);
       if (fallbackItem) {

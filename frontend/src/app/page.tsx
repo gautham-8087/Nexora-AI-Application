@@ -128,110 +128,114 @@ export default function Home() {
     <div className="min-h-screen flex bg-slate-50 dark:bg-[#151616] text-slate-800 dark:text-slate-100 transition-colors duration-300">
       
       {/* 1. PERMANENT LEFT SIDEBAR (Desktop: ChatGPT/Claude/Gemini style) */}
-      <aside className="hidden md:flex flex-col w-64 bg-slate-50 dark:bg-[#181a1a] border-r border-slate-250 dark:border-[#2d3030]/80 h-screen fixed left-0 top-0 z-10 select-none">
-        
-        {/* Brand Header */}
-        <div className="p-4 border-b border-slate-200/50 dark:border-[#2d3030]/40 flex flex-col gap-4">
-          <div 
-            onClick={clearSearch}
-            className="flex items-center gap-2 px-1 cursor-pointer"
-          >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 dark:from-[#10b981] dark:to-teal-400 flex items-center justify-center text-white font-black text-sm">
-              N
+      {activeView === 'results' && (
+        <aside className="hidden md:flex flex-col w-64 bg-slate-50 dark:bg-[#181a1a] border-r border-slate-250 dark:border-[#2d3030]/80 h-screen fixed left-0 top-0 z-10 select-none">
+          
+          {/* Brand Header */}
+          <div className="p-4 border-b border-slate-200/50 dark:border-[#2d3030]/40 flex flex-col gap-4">
+            <div 
+              onClick={clearSearch}
+              className="flex items-center gap-2 px-1 cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 dark:from-[#10b981] dark:to-teal-400 flex items-center justify-center text-white font-black text-sm">
+                N
+              </div>
+              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
+                Nexora <span className="text-emerald-600 dark:text-[#10b981]">AI</span>
+              </span>
             </div>
-            <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
-              Nexora <span className="text-emerald-600 dark:text-[#10b981]">AI</span>
-            </span>
+
+            {/* Start New Thread button */}
+            <button
+              onClick={clearSearch}
+              className="w-full flex items-center justify-between px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/15 text-white dark:text-[#10b981] rounded-full border border-emerald-500/20 font-bold text-xs transition-all duration-200 shadow-sm shadow-emerald-500/5 cursor-pointer"
+            >
+              <span>New Research Chat</span>
+              <Plus size={13} />
+            </button>
           </div>
 
-          {/* Start New Thread button */}
-          <button
-            onClick={clearSearch}
-            className="w-full flex items-center justify-between px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/15 text-white dark:text-[#10b981] rounded-full border border-emerald-500/20 font-bold text-xs transition-all duration-200 shadow-sm shadow-emerald-500/5 cursor-pointer"
-          >
-            <span>New Research Chat</span>
-            <Plus size={13} />
-          </button>
-        </div>
+          {/* Recent Threads History list */}
+          <div className="flex-1 overflow-y-auto px-2 py-4 flex flex-col gap-1">
+            <h4 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550 mb-2.5">
+              Recent Threads
+            </h4>
+            {history && history.length > 0 ? (
+              history.map((item) => {
+                const isActive = activeThread?.id === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => viewThreadDetails(item.id)}
+                    className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors truncate group cursor-pointer ${
+                      isActive
+                        ? 'bg-slate-200/60 dark:bg-[#252727] text-emerald-600 dark:text-[#10b981] font-semibold border-l-2 border-emerald-500'
+                        : 'hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <MessageSquare size={13} className={`mt-0.5 shrink-0 ${isActive ? 'text-emerald-500' : 'text-slate-400 group-hover:text-emerald-500'}`} />
+                    <span className="text-xs truncate flex-1 group-hover:text-slate-900 dark:group-hover:text-white">
+                      {item.query}
+                    </span>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-3 py-4 text-[11px] italic text-slate-400 dark:text-slate-500">
+                No chat records.
+              </div>
+            )}
+          </div>
 
-        {/* Recent Threads History list */}
-        <div className="flex-1 overflow-y-auto px-2 py-4 flex flex-col gap-1">
-          <h4 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550 mb-2.5">
-            Recent Threads
-          </h4>
-          {history && history.length > 0 ? (
-            history.map((item) => {
-              const isActive = activeThread?.id === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => viewThreadDetails(item.id)}
-                  className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors truncate group cursor-pointer ${
-                    isActive
-                      ? 'bg-slate-200/60 dark:bg-[#252727] text-emerald-600 dark:text-[#10b981] font-semibold border-l-2 border-emerald-500'
-                      : 'hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <MessageSquare size={13} className={`mt-0.5 shrink-0 ${isActive ? 'text-emerald-500' : 'text-slate-400 group-hover:text-emerald-500'}`} />
-                  <span className="text-xs truncate flex-1 group-hover:text-slate-900 dark:group-hover:text-white">
-                    {item.query}
-                  </span>
-                </button>
-              );
-            })
-          ) : (
-            <div className="px-3 py-4 text-[11px] italic text-slate-400 dark:text-slate-500">
-              No chat records.
-            </div>
-          )}
-        </div>
+          {/* Sidebar Footer User detail */}
+          <div className="p-3 border-t border-slate-200/50 dark:border-[#2d3030]/40 flex flex-col gap-2">
+            {currentUser ? (
+              <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 cursor-pointer">
+                <div className="w-7.5 h-7.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-[#10b981] flex items-center justify-center font-bold text-xs uppercase">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="text-xs font-bold truncate leading-tight">{currentUser.name}</span>
+                  <span className="text-[9px] text-slate-400 dark:text-slate-550 truncate leading-none mt-0.5">{currentUser.email}</span>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => setAuthModalOpen(true)}
+                className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 cursor-pointer text-slate-600 dark:text-slate-400"
+              >
+                <div className="w-7.5 h-7.5 rounded-full bg-slate-200 dark:bg-[#252727] flex items-center justify-center">
+                  <User size={14} />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="text-xs font-bold truncate leading-tight">Guest Session</span>
+                  <span className="text-[9px] text-emerald-600 dark:text-[#10b981] font-semibold leading-none mt-0.5 hover:underline">Click to Sign In</span>
+                </div>
+              </div>
+            )}
+          </div>
 
-        {/* Sidebar Footer User detail */}
-        <div className="p-3 border-t border-slate-200/50 dark:border-[#2d3030]/40 flex flex-col gap-2">
-          {currentUser ? (
-            <div className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 cursor-pointer">
-              <div className="w-7.5 h-7.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-[#10b981] flex items-center justify-center font-bold text-xs uppercase">
-                {currentUser.name.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0 flex flex-col">
-                <span className="text-xs font-bold truncate leading-tight">{currentUser.name}</span>
-                <span className="text-[9px] text-slate-400 dark:text-slate-500 truncate leading-none mt-0.5">{currentUser.email}</span>
-              </div>
-            </div>
-          ) : (
-            <div 
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-slate-200/30 dark:hover:bg-[#202222]/30 cursor-pointer text-slate-600 dark:text-slate-400"
-            >
-              <div className="w-7.5 h-7.5 rounded-full bg-slate-200 dark:bg-[#252727] flex items-center justify-center">
-                <User size={14} />
-              </div>
-              <div className="flex-1 min-w-0 flex flex-col">
-                <span className="text-xs font-bold truncate leading-tight">Guest Session</span>
-                <span className="text-[9px] text-emerald-600 dark:text-[#10b981] font-semibold leading-none mt-0.5 hover:underline">Click to Sign In</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-      </aside>
+        </aside>
+      )}
 
       {/* 2. MOBILE DRAWER SIDEBAR (collapsible layout) */}
       <SearchHistory isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
 
       {/* 3. MAIN WORKSPACE CONTENT */}
-      <div className="flex-1 md:pl-64 flex flex-col min-h-screen relative">
+      <div className={`flex-grow ${activeView === 'results' ? 'md:pl-64' : ''} flex flex-col min-h-screen relative transition-all duration-300`}>
         
         {/* Custom Header Navbar */}
         <div className="sticky top-0 right-0 w-full z-20 flex items-center justify-between bg-white/70 dark:bg-[#151616]/75 backdrop-blur-md border-b border-slate-200/80 dark:border-[#2d3030]/80 pr-6 pl-4 md:pl-6">
           {/* Mobile Menu Trigger */}
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#202222] text-slate-500 cursor-pointer mr-2"
-            aria-label="Open mobile menu"
-          >
-            <Menu size={20} />
-          </button>
+          {activeView === 'results' && (
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#202222] text-slate-500 cursor-pointer mr-2"
+              aria-label="Open mobile menu"
+            >
+              <Menu size={20} />
+            </button>
+          )}
           
           <div className="flex-grow">
             <Navbar />
